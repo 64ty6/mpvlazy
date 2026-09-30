@@ -128,7 +128,7 @@
 | `portable_config/shaders/` | 同上 | GLSL 着色器：`Adaptive_sharpen/`、`Ani/`、`Anime4K/`、`EDI/`、`FSRCNNX/`、`QCOM/` |
 | `portable_config/fonts/` | 同上 | 字幕与界面字体：`LXGWWenKaiMonoLite-Regular.ttf`、`MaterialIconsRound-Regular.otf`、`uosc_textures.ttf` |
 | `portable_config/vs/` | 同上 | VapourSynth 脚本（补帧 MEMC、降噪 NR、超分 SR 等），依赖整合包自带 VS 环境与模型 |
-| `portable_config/_cache/` | 同上 | 运行时缓存（详见「备份范围」，可跳过） |
+| `portable_config/_cache/` | 同上 | 运行时缓存，**不在仓库中**（见「备份范围」） |
 
 ---
 
@@ -136,13 +136,10 @@
 
 **包含**：
 - `portable_config/` 下的全部配置与资源——配置文件（`mpv.conf`、`profiles.conf`、两个 `input_*.conf`、`script-opts.conf`、`saved-props.json`）、`scripts/`、`shaders/`、`fonts/`、`vs/`。
-- 现状还包含 `portable_config/_cache/`（见下）。
 
 **排除 / 可不还原**：
 - **mpv 程序本体与依赖**：`mpv.exe`、运行库、`vs-plugins/`、AI 模型等均不在仓库内，由 mpv-lazy 整合包提供。
-- **`portable_config/_cache/`（运行时缓存）**：内含 `shader/`（GPU 着色器编译缓存）、`watch_later/`（播放位置记录）、命令历史等，mpv 会在首次运行时**自动重建**，与播放行为正确性无关，还原时可不复制。
-
-**关于 `_cache/` 的现状说明（需确认）**：仓库当前**实际跟踪了** `portable_config/_cache/`（约 130+ 个缓存文件），与"仅备份配置、排除缓存"的常见做法不一致。这属于历史提交内容，不影响还原功能；若希望仓库更精简，建议后续把 `_cache/` 从版本控制中移除并加入 `.gitignore`——此项需用户确认后再做，本文档不擅自更改。
+- **`portable_config/_cache/`（运行时缓存）**：内含 `shader/`（GPU 着色器编译缓存）、`watch_later/`（播放位置记录）、命令历史等，mpv 会在首次运行时**自动重建**，与播放行为正确性无关，还原时可不复制。仓库**不跟踪**该目录（已写入 `.gitignore`，`backup.ps1` 导出时也会剔除）。
 
 ---
 

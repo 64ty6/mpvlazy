@@ -1,1 +1,4 @@
 Backup/
+
+# mpv 着色器编译缓存（会自动重建，且每次播放都变动）
+portable_config/_cache/
