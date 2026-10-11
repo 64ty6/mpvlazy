@@ -1,16 +1,17 @@
-# mpv-lazy 配置还原
+#requires -Version 7.0
+# mpv-lazy 配置恢复，现有配置先备份。
+param(
+    [string]$Source = $PSScriptRoot,
+    [string]$ProgramDirectory = 'D:\Tools\mpv-lazy'
+)
 
-param([string]$Source = $PSScriptRoot)
+$ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'scripts/config-common.ps1')
 
-Write-Host "=== mpv-lazy 配置还原 ===" -ForegroundColor Cyan
+Assert-ApplicationStopped @('mpv')
+Assert-RequiredPaths $ProgramDirectory @('mpv.exe')
+$src = Join-Path $Source 'portable_config'
+Assert-RequiredPaths $src @('mpv.conf', 'profiles.conf', 'script-opts.conf', 'input_uosc.conf')
+if (Test-Path -LiteralPath (Join-Path $Source '.backup-incomplete')) { throw '该备份尚未完成，不能恢复。' }
+Restore-Configuration @(@{ Source = $src; Destination = (Join-Path $ProgramDirectory 'portable_config') })
 
-$src = Join-Path $Source "portable_config"
-$dst = "D:\Tools\mpv-lazy\portable_config"
-
-if (Test-Path $src) {
-    if (-not (Test-Path $dst)) { New-Item -ItemType Directory -Path $dst -Force | Out-Null }
-    Get-ChildItem $src | Copy-Item -Destination $dst -Recurse -Force
-    Write-Host "已还原到 $dst" -ForegroundColor Green
-} else {
-    Write-Host "未找到 portable_config/" -ForegroundColor Red
-}
