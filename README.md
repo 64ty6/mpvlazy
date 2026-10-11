@@ -1,10 +1,30 @@
 # mpv-lazy 配置备份
 
-本仓库是 Windows 上 mpv-lazy（mpv 播放器整合包）的 `portable_config` 用户配置快照（解码/渲染选项、画质预设、uosc 界面、脚本、着色器、字幕字体、VapourSynth 补帧脚本等）。换新电脑时，clone 本仓库，按下文**手动步骤**把配置还原到 `D:\Tools\mpv-lazy\portable_config\`，即可恢复与旧机一致的播放行为和快捷键。
+本仓库是 Windows 上 mpv-lazy（mpv 播放器整合包）的 `portable_config` 用户配置快照（解码/渲染选项、画质预设、uosc 界面、脚本、着色器、字幕字体、VapourSynth 补帧脚本等）。换新电脑时，clone 本仓库，使用 PowerShell 7 恢复脚本把配置还原到 `D:\Tools\mpv-lazy\portable_config\`，即可恢复与旧机一致的播放行为和快捷键。
 
 > 本仓库只包含 `portable_config` 配置，**不包含 mpv 程序本体**（`mpv.exe`、运行库、VS 插件与模型）。
 
 ---
+
+
+## PowerShell 7 脚本入口
+
+所有 PowerShell 命令均在 **PowerShell 7** 中执行。仓库脚本使用 `#requires -Version 7.0`，不支持 Windows PowerShell 5.1。
+
+```powershell
+pwsh -NoProfile -Command '$PSVersionTable.PSVersion'
+pwsh -NoProfile -File .\backup.ps1
+pwsh -NoProfile -File .\restore.ps1
+```
+
+自动操作优先使用以上脚本；下文手动步骤用于说明目录映射和还原后检查，不能绕过脚本的进程及完整性校验。
+
+- 备份前完全退出应用及后台进程。缺少必要配置、文件被占用或复制失败时脚本报错停止，不打印成功。
+- 导出目录内的 `.backup-incomplete` 表示快照尚未完成；存在该标记时禁止恢复。每次导出使用独立目录，不与旧备份合并。
+- 恢复前先验证所有源目录，再把将要覆盖的现有配置复制到目标目录旁的 `*.before-restore-<时间戳>`。发生错误时可从该目录找回原文件；新复制的文件不会自动回滚。
+- 目录按内容逐项复制，重复恢复不会产生同名子目录嵌套。数据库的 `CURRENT` 必须指向存在且可读取的 `MANIFEST-*`；数值命名的事务日志（如 `000003.log`）属于数据库内容，必须保留。
+- 若在 Codex 等沙盒中操作，进程列表可能不完整。请先在宿主机确认应用退出；文件锁或复制错误仍会使脚本停止。
+
 
 ## 前置要求
 
@@ -98,7 +118,7 @@
 - **期望结果**：mpv 正常打开、底部出现 uosc 控制界面；按 `Ctrl+1`~`Ctrl+5` 可切换画质预设（见 `input_uosc.conf`）。
 - **不满足时**：若启动报错，先看 `mpv.conf` 中断言相关改动；需要日志时取消 `mpv.conf` 中 `#log-file = "~~desktop/mpv-lazy.log"` 的注释后重启，读取桌面日志再排查。
 
-> **备选方式**：仓库根目录的 `restore.ps1` 可一键完成步骤 4 的复制（`.\restore.ps1`），但**不含**安装检查、进程检查与验证，仅作参考，正式还原以本手动流程为准。
+> **推荐入口**：运行 `pwsh -NoProfile -File .\restore.ps1`。脚本检查安装目录、进程及必要配置，先备份现有配置，再按目录内容恢复；上面的手动步骤仅用于理解映射和检查结果。
 
 ---
 
@@ -139,7 +159,7 @@
 
 **排除 / 可不还原**：
 - **mpv 程序本体与依赖**：`mpv.exe`、运行库、`vs-plugins/`、AI 模型等均不在仓库内，由 mpv-lazy 整合包提供。
-- **`portable_config/_cache/`（运行时缓存）**：内含 `shader/`（GPU 着色器编译缓存）、`watch_later/`（播放位置记录）、命令历史等，mpv 会在首次运行时**自动重建**，与播放行为正确性无关，还原时可不复制。仓库**不跟踪**该目录（已写入 `.gitignore`，`backup.ps1` 导出时也会剔除）。
+- **`portable_config/_cache/`**：仓库默认不跟踪此目录。备份脚本排除可重建的着色器等缓存，但单独保留 `_cache/watch_later/` 中的播放位置；从该导出快照恢复时也会恢复进度。播放位置无法靠重建缓存找回，不应与着色器缓存一起丢弃。
 
 ---
 
@@ -149,7 +169,7 @@
 
 - **一键脚本**（仓库根目录 `backup.ps1`，会把 `portable_config` 复制到 `Backup\<时间戳>\`）：
   ```powershell
-  .\backup.ps1
+  pwsh -NoProfile -File .\backup.ps1
   ```
   注意：脚本输出到 `Backup/`，而 `Backup/` 已被 `.gitignore` 忽略，仅作本地存档；要更新仓库需再把内容放到 `portable_config/`。
 - **手动同步（推荐用于更新仓库）**：
@@ -169,3 +189,4 @@
 5. **显卡相关选项**：`mpv.conf` 中 `d3d11-adapter`、`vulkan-device` 等按显卡名过滤的选项当前为注释；如旧机启用过，换机后需按新显卡名调整。`vs/` 下脚本区分 NV（NVIDIA）与 DML（DirectML）版本，需按新机显卡选择对应预设。
 6. **还原是覆盖操作**：步骤 4 不会删除目标目录多余文件；如需完全干净还原，可先手工清空 `D:\Tools\mpv-lazy\portable_config`（**操作前先按步骤 3 备份**）。
 7. **`saved-props.json` 的副作用**：它会记住 `volume`/`mute` 并覆盖 `mpv.conf` 中的初始值，需重置音量时删除该文件。
+

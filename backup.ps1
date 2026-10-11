@@ -1,13 +1,22 @@
-# mpv-lazy 配置备份
+#requires -Version 7.0
+# mpv-lazy 配置备份，播放进度一并保留。
+param(
+    [string]$SourceDirectory = 'D:\Tools\mpv-lazy\portable_config',
+    [string]$Destination = (Join-Path $PSScriptRoot 'Backup' (Get-Date -Format 'yyyyMMdd-HHmmss-fffffff'))
+)
 
-$dest = Join-Path $PSScriptRoot "Backup" (Get-Date -Format "yyyyMMdd-HHmmss")
-Write-Host "=== mpv-lazy 配置备份 ===" -ForegroundColor Cyan
+$ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'scripts/config-common.ps1')
 
-$src = "D:\Tools\mpv-lazy\portable_config"
-if (Test-Path $src) {
-    $d = Join-Path $dest "portable_config"
-    Copy-Item $src $d -Recurse -Force
-    # 剔除着色器编译缓存：mpv 会自动重建，且每次播放都在变动
-    Remove-Item (Join-Path $d "_cache") -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Host "→ $dest" -ForegroundColor Green
+Assert-ApplicationStopped @('mpv')
+Assert-RequiredPaths $SourceDirectory @('mpv.conf', 'profiles.conf', 'script-opts.conf', 'input_uosc.conf')
+Assert-SeparatePaths $SourceDirectory $Destination
+New-BackupDirectory $Destination
+$dst = Join-Path $Destination 'portable_config'
+Copy-DirectoryContents $SourceDirectory $dst @('_cache')
+$progress = Join-Path $SourceDirectory '_cache/watch_later'
+if (Test-Path -LiteralPath $progress -PathType Container) {
+    Copy-DirectoryContents $progress (Join-Path $dst '_cache/watch_later')
 }
+Complete-Backup $Destination
+
