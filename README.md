@@ -190,3 +190,11 @@ pwsh -NoProfile -File .\restore.ps1
 6. **还原是覆盖操作**：步骤 4 不会删除目标目录多余文件；如需完全干净还原，可先手工清空 `D:\Tools\mpv-lazy\portable_config`（**操作前先按步骤 3 备份**）。
 7. **`saved-props.json` 的副作用**：它会记住 `volume`/`mute` 并覆盖 `mpv.conf` 中的初始值，需重置音量时删除该文件。
 
+
+## 私有迁移数据（2026-10-11）
+
+最新个人配置和状态存放在私有仓库 `64ty6/wezterm-yazi-nushell-starship` 的 `migration/data/
+mpvlazy
+`，本公开仓库保留脚本与可公开配置。完整恢复请参照私有仓库 `migration/README.md`，使用 `migration/restore-all.ps1`。单独调用此仓库的 `restore.ps1` 时，传入 `-Source <私有迁移快照目录>`。大型运行环境另存私有 Release 附件。
+
+旧个人数据在当前分支已移除；此前公开提交的历史不在本次重写范围内。
